@@ -1,8 +1,4 @@
-# twitter-scala-school-notes
-
-Twitter Scala School 言简意赅，但过于简略，本文是对其的学习笔记，在其基础上有所增删。
-
-[Effective Scala](http://twitter.github.io/effectivescala/index-cn.html)
+# Summary
 
 * [基础 I](basics.md)
 * [基础 II](basics2.md)
