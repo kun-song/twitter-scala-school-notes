@@ -47,7 +47,7 @@ g(10)  // 60
 
 多个 `case` 语句，是 `PartialFunction` 的组合。
 
-### `PartialFunction` 组合 -> `orElse`
+### `orElse`
 
 Scala 的 `case` 语句是定义 `PartialFunction` 的简洁形式，避免创建匿名类的实例，可以用 `orElse` 组合 `PartialFunction`：
 
