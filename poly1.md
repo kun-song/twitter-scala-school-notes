@@ -112,7 +112,105 @@ def fact(n: Int): Int = if (n <= 1) 1 else n * fact(n - 1)
 
 ## 变型（Variance）
 
+与纯函数式语言不同，Scala 的类型系统必须能 **同时** 解释 class hierarchies 和 polymorphism。
 
+class hierarchies 是 OOP 概念，由 subtype 引出，而 subtype 主要问题即 [里氏替换原理](https://en.wikipedia.org/wiki/Liskov_substitution_principle)，即：
+
+>If S is a subtype of T, then objects of type T may be replaced with objects of type S.
+
+这是 subtype 的核心原理，通过里氏替换原理可以实现 [subtype polymorphism](https://en.wikipedia.org/wiki/Subtyping)，当然这有点扯远了。
+
+因此，OOP 的 subtype 和 FP 的 parametric polymorphism 都能实现多态，而 Scala 是一门融合 OOP + FP 的多范式语言，因此 Scala 对这两种多态都支持。
+
+当 subtype 遇上 parametric polyporphism 时，自然会出现以下问题：
+
+若 `S` 是 `T` 的子类，则 `List[S]` 与 `List[T]` 是什么关系呢？（`List` 泛指泛型容器）
+
+为解决该问题，Scala 提供了 3 种变型标记，来表达 `List[S]` 与 `List[T]` 之间的关系：
+
+|               |                meaning           |        notion      |
+|       :---:   |                :----:           |        :----:     |
+| invariant     | `List[S]` 与 `List[T]` 无任何关系 |       `[T]`       |
+| covariant     | `List[S]` 是 `List[T]` 的子类     |       `[+T]`      |
+| contravariant | `List[T]` 与 `List[S]` 的子类     |       `[-T]`      |
+
+### 1. 协变
+
+Scala 的不可变集合，基本都定义为协变，例如 `List`：
+
+```Scala
+sealed abstract class List[+A] {
+  def ::[B >: A] (x:B) : List[B]
+}
+```
+
+使用场景：
+
+```Scala
+abstract class Animal(name: String)
+case class Bird(name: String) extends Animal(name)
+case class Duck(name: String) extends Animal(name)
+
+val birds = new Bird("A") :: new Bird("B") :: Nil
+val ducks = new Duck("a") :: new Duck("b") :: Nil
+
+def toString(animals: List[Animal]): Unit = println(animals.map(_.toString).mkString(", "))
+
+toString(birds)
+toString(ducks)
+```
+
+`toString` 参数为 `List[Animal]`，而 `Duck` 和 `Bird` 都是 `Animal` 的子类，因此 `List[Bird]` 和 `List[Duck]` 都是 `List[Animal]` 的子类，可以调用 `toString` 函数。
+
+### 2. 逆变
+
+协变比较容易理解，但逆变有点反直觉，其实函数定义就用到了逆变：
+
+```Scala
+trait PartialFunction[-A, +B] extends (A => B)
+```
+
+暂时忽略协变的返回类型，`PartialFunction` 的入参是逆变的，这有什么意义呢？
+
+如下继承关系：
+
+```Scala
+class Animal(val name: String)
+class Bird(name: String) extends Animal(name)
+class Duck(name: String) extends Bird(name)
+```
+
+假设现在需要实现一个函数，以获取 `Bird` 的名字：
+
+```Scala
+val getBirdName: Bird ⇒ String = ???
+```
+
+但 `Animal` 标准库中已经有获取名字的函数了：
+
+```Scala
+val getName: Animal ⇒ String = _.name
+```
+
+`getName` 类型为 `Animal => String`，即 `Function[Animal, String]`，`getBirdName` 类型为 `Function[Bird, String]`，因为：
+
+* `Function[-A, +B]` 入参是逆变的；
+* `Bird` 是 `Animal` 的子类；
+
+因此 `Function[Animal, String]` 是 `Function[Bird, String]` 的子类，即 `getName` 是 `getBirdName` 的子类，所以可以用 `getName` 替换 `getBirdName`：
+
+```Scala
+val getBirdName: Bird ⇒ String = getName
+```
+
+>`Function1[-A, +B]` 入参为协变是否合理？
+>
+>
+
+
+### Java ？
+
+>这里说的不太准确，因为 Java 也支持某种程度的 parametric polymorphism，因此也存在同样的问题。
 
 
 
