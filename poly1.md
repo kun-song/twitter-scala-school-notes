@@ -64,7 +64,31 @@ res1: List[Int] = List(2, 3)
 
 ### Scala 的多态是 rank-1 多态（秩 1 多态）
 
+简单讲，rank-1 多态意味着在 Scala 中，有些类型概念可能由于 **too generic**（过于泛化），而编译器无法理解。
 
+一个经常演示的例子是，假设有函数 `toList`，其类型为 `A => List[A]`：
 
+```Scala
+def toList[A](a: A): List[A] = a :: Nil
+```
 
+若想将 `toList` 泛化使用：
+
+```Scala
+def foo[A, B](f: A ⇒ List[A], b: B) = f(b)
+```
+
+`foo` 第一个参数 `f` 类型是 `A => List[A]`，按理说 `f(b)` 是合法调用，因为 **任意类型** 都可以调用 `f`，即使它是 `B` 类型的值。
+
+但因为 Scala 是 rank-1 多态（because all type variables have to be fixed at the invocation site.），所以上述代码编译报错！
+
+即使将 `B` 固定为具体类型，也会报 **type mismatch** 错误：
+
+```Scala
+def foo[A](f: A ⇒ List[A], b: Int) = f(b)
+```
+
+## 类型推导
+
+静态类型被人诟病的重要理由是，静态类型需要大量语法开销，Scala 通过类型推到缓解该问题。
 
