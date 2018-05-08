@@ -205,12 +205,98 @@ val getBirdName: Bird ⇒ String = getName
 
 >`Function1[-A, +B]` 入参为协变是否合理？
 >
+>非常合理，假如第一个参数是协变，即 `Function1[+A, +B]`，则 `Bird => String` 是 `Animal => String` 的子类，因此可以用 `getBirdName` 替换 `getName`，**但是** `getName` 可以用于任意 `Animal`，虽然语法上 `getBirdName` 替换掉了 `getName`，但是 `getBirdName` 并不能用于任意 `Animal`，因此早晚会报错：
 >
+>若有 `Human extends Animal`，则 `getBirdName` 无法用于 `Human` 实例。
 
+`Function1` 的返回类型为协变，这也非常合理，假设 `f` 返回类型为 `Bird`，`g` 返回类型为 `Duck`，自然可以用 `g` 替换 `f`，毕竟 `Duck` 可以替换 `Bird`：
+
+```Scala
+val f: () => Bird = () => new Duck("duck")
+```
 
 ### Java ？
 
 >这里说的不太准确，因为 Java 也支持某种程度的 parametric polymorphism，因此也存在同样的问题。
 
+## Bounds（边界）
 
+边界用来表达 subtype 关系，可以用来对 **类型参数** 添加限制。
 
+### 1. 上界
+
+例如如下 `names` 定义将编译报错，提示 `T` 类型无 `name` 函数：
+
+```Scala
+def names[T](xs: List[T]): List[String] = xs.map(_.name)
+```
+
+指定 `T` 的 **类型上界** 为 `Animal` 可解决该错误：
+
+```Scala
+def names[T <: Animal](xs: List[T]): List[String] = xs.map(_.name)
+```
+
+* 类型上界：`T` 必须是 `Animal` 的子类（`Animal` 亦可）；
+
+### 2. 下界
+
+类型下界一般与逆变、协变一起使用。
+
+`List[+A]` 是协变的，因此 `List[Bird]` 是 `List[Animal]` 的子类，`List` 定义有 `::` 函数：
+
+```Scala
+def ::[B >: A] (x: B): List[B]
+```
+
+`::` 将类型 `B` 的元素添加到类型 `List[A]` 的列表中，并返回 `List[B]`，这是非常合理的，假设有：
+
+```Scala
+val birds: List[Bird] = List(new Bird("bird 1"), new Bird("bird 2"))
+```
+
+能将 `Animal` 实例添加到 `birds` 中吗？在 Java 中自然是不可以的，但实际上，因为 `List[Bird]` 可以被视为 `List[Animal]`，因此允许添加 `Animal` 是更合理的处理方式，`::` 通过类型下界实现了该方式：
+
+```Scala
+// List[Bird]
+new Duck("duck 1") :: birds
+// List[Animal]
+new Animal("Animal 1") :: birds
+```
+
+## Existential Quantification（存在量化）
+
+Existential Quantification 例子：
+
+```Scala
+import scala.language.existentials
+
+def count(xs: List[T forSome {type T}]): Int = xs.size
+```
+
+* **注意**：`count` 后面没有类型参数！
+
+`T forSome {type T}` 比较繁琐，Scala 允许使用通配符 `_` 替代它：
+
+```Scala
+def count(xs: List[_]): Int = xs.size
+```
+
+也可以为 `_` 添加类型边界：
+
+```Scala
+def recover(clazz: Class[_ <: Throwable], supplier: Supplier[Out]): javadsl.Flow[In, Out, Mat] =
+  recover {
+    case elem if clazz.isInstance(elem) ⇒ supplier.get()
+  }
+```
+
+通过 `_ <: Throwable` 指定 `_` 为 `Throwable` 的子类，则只能用 `Throwable` 子类调用 `recover` 函数。
+
+**注意**：`_` 会失去类型信息，例如：
+
+```Scala
+def drop1(xs: List[_]) = xs.tail
+```
+
+返回值类型为 `List[Any]`。
