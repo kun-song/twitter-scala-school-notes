@@ -92,3 +92,27 @@ def foo[A](f: A ⇒ List[A], b: Int) = f(b)
 
 静态类型被人诟病的重要理由是，静态类型需要大量语法开销，Scala 通过类型推到缓解该问题。
 
+类型推导是函数式语言的常见特性，类型推导的经典算法是 Hindley-Milner 算法，最早由 ML 语言使用，H-M 算法属于 **全局类型推导**，Scala 的类型推导稍微有点不同，是 **局部类型推导**，但本质是一样的：infer constraints, and attempt to unify a type（推导约束，尽量统一类型）。
+
+Scala 的类型推导是局部的，这意味着 Scala 每次仅分析一个表达式，最常见的局部类型推导与全局类型推导的区别例子是递归函数：
+
+```Scala
+def fact(n: Int) = if (n <= 1) 1 else n * fact(n - 1)
+```
+
+上述 `fact` 定义在 Scala 中会报错，而在 Haskell 中则正常，原因是局部类型推导无法推导递归定义的函数的类型，因为在 Scala 中需要明确指定返回值类型：
+
+```Scala
+def fact(n: Int): Int = if (n <= 1) 1 else n * fact(n - 1)
+```
+
+>Scala 采用局部类型推断的原因是，Scala 需要支持 OOP 中的子类型等概念，H-M 无法很好处理 OO 概念，因此使用一种折中的局部类型推导，兼容 FP 和 OOP。
+
+>强烈推荐该 [博客](https://madusudanan.com/blog/scala-tutorials-part-2-type-inference-in-scala/)，对 Scala 类型推导讲的很好。
+
+## 变型（Variance）
+
+
+
+
+
