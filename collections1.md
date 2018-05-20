@@ -225,6 +225,27 @@ val xs = List(List(1, 2), List(3))
 xs.flatMap(m ⇒ m.map(_ * 2))  // List(2, 4, 6)
 ```
 
+### `take` & `takeRight` & `takeWhile`
+
+take 从左侧截取前 n 个元素：
+
+```Scala
+xs.take(2)  // List(1, 2)
+```
+
+takeRight 从右侧截取 n 个元素：
+
+```Scala
+xs.takeRight(2)  // List(3, 4)
+```
+
+takeWhile 截取前 x 个连续满足 predicate 的元素：
+
+```Scala
+xs.takeWhile(_ <= 3)  // List(1, 2, 3)
+xs.takeWhile(_ >= 3)  // 第一个元素就不满足要求，结果为 List()
+```
+
 ### 万能的 `fold`
 
 上面介绍的所有组合子都可以用 `fold` 实现，例如 `map`：
